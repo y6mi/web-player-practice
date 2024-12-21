@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fusai - Audio Web Player</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome / CHANGE LATER THIS IS SOMEONE ELSE'S MINE JUST DOESNT WORK RN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div class="container">
+    <div class="music-player">
+    <!--
+    <nav>
+        <div class="circle">
+            <i class="fas fa-angle-left"></i>
+        </div>
+        <div class="circle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </nav>
+    -->
+    <img src="./assets/thumbnail.png" class="song-img">
+    <h1>Song Title</h1>
+    <p>Artist Name</p>
+
+
+    <div class="controls">
+        <div onclick="skipBackward()">
+            <i class="fas fa-backward"></i>
+        </div>
+        <div onclick="playPause()">
+            <i class="fas fa-play" id="ctrlIcon"></i>
+        </div>
+        <div onclick="skipForward()">
+            <i class="fas fa-forward"></i>
+        </div>
+    </div>
+
+    <div class="controls2">
+        <audio id="song">
+            <source src="./assets/y6mi_lifestyle.mp3" type="audio/mpeg">
+        </audio>
+        <input type="range" value="0" id="progress">
+        <!-- do some volume slider shit here im too high and lazy to get to anymore html today 12/19 4:25 pm-->
+        <div class="volume-control">
+            <p>Volume</p>
+            <input type="range" value="0" id="volume-slider">
+        </div>
+    </div>
+
+   
+</div>
+
+<script>
+    let progress = document.getElementById("progress");
+    let song = document.getElementById("song");
+    let ctrlIcon = document.getElementById("ctrlIcon");
+    let songTitle = document.querySelector(".music-player h1");
+    let artistName = document.querySelector(".music-player p");
+
+    // array of songs in the ./assets/songs folder
+    const songs = [
+        "./assets/songs/y6mi_Lifestyle.mp3",
+        "./assets/songs/y6mi_Centerfield.mp3",
+        "./assets/songs/y6mi_PushinThru.mp3"
+    ];
+
+    let currentSongIndex = 0;
+
+    function loadSong(index) {
+        if (index < 0) index = songs.length - 1;
+        if (index >= songs.length) index = 0;
+
+        currentSongIndex = index;
+        song.src = songs[currentSongIndex];
+
+        updateSongDetails();
+        song.load(); 
+
+        // auto plays the song after loading the page
+        song.play().then(() => {
+            ctrlIcon.classList.add("fa-pause");
+            ctrlIcon.classList.remove("fa-play");
+        }).catch((error) => {
+            console.error("Failed to play the song:", error);
+        });
+    }
+
+    function updateSongDetails() {
+        let filePath = songs[currentSongIndex];
+        let fileName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.lastIndexOf("."));
+        let [artist, title] = fileName.split("_");
+
+        songTitle.textContent = title || "Unknown Title";
+        artistName.textContent = artist || "Unknown Artist";
+    }
+
+    function playPause() {
+        if (ctrlIcon.classList.contains("fa-pause")) {
+            song.pause();
+            ctrlIcon.classList.remove("fa-pause");
+            ctrlIcon.classList.add("fa-play");
+        } else {
+            song.play().then(() => {
+                ctrlIcon.classList.add("fa-pause");
+                ctrlIcon.classList.remove("fa-play");
+            }).catch((error) => {
+                console.error("Failed to play the song:", error);
+            });
+        }
+    }
+
+    function skipForward() {
+        loadSong(currentSongIndex + 1);
+    }
+
+    function skipBackward() {
+        loadSong(currentSongIndex - 1);
+    }
+
+    song.onloadedmetadata = function () {
+        progress.max = song.duration;
+        progress.value = song.currentTime;
+    };
+
+    song.ontimeupdate = function () {
+        progress.value = song.currentTime;
+    };
+
+    progress.onchange = function () {
+        song.currentTime = progress.value;
+        song.play().then(() => {
+            ctrlIcon.classList.add("fa-pause");
+            ctrlIcon.classList.remove("fa-play");
+        }).catch((error) => {
+            console.error("Failed to play the song:", error);
+        });
+    };
+
+    let volume = document.getElementById("volume-slider");
+    volume.value = 75; // volume gets set to this on page loaded
+    volume.addEventListener("change", function (e) {
+        song.volume = e.currentTarget.value / 100;
+    });
+
+    window.onload = function () {
+        loadSong(currentSongIndex);
+        song.volume = volume.value / 100; // sets t he song volume based on the slider
+    };
+
+    //spin shit for button clicking type shit
+    document.querySelectorAll(".controls div").forEach(button => {
+    button.addEventListener("click", () => {
+        button.classList.add("spin", "pop");
+
+        if (button.querySelector("i") && button.querySelector("i").classList.contains("fa-backward")) {
+            button.classList.add("spin-reverse");
+        } else {
+            button.classList.remove("spin-reverse");
+        }
+
+        button.addEventListener("animationend", (event) => {
+            if (event.animationName === "spin" || event.animationName === "spin-reverse") {
+                button.classList.remove("spin", "spin-reverse");
+            }
+            if (event.animationName === "pop") {
+                button.classList.remove("pop");
+            }
+        }, { once: true });
+    });
+});
+
+
+
+</script>
+
+
+</body>
+</html>
